@@ -9,14 +9,14 @@ PROGRAM TestingSDDB
 
     PRINT *, 'Testing SDDB'
 
-    att%temp = 77.0
-    att%EES = .TRUE.
+    att%temp = 300
+    att%EES = .FALSE.
 
     x = (/ 1, 2, 3, 4 /)
 
     CALL init('data.h5')
 
-    CALL attach_attribute(att)
+    CALL attach_attributes(att)
     CALL end()
 CONTAINS
 

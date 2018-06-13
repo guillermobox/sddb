@@ -1,5 +1,6 @@
 MODULE system
-
+    USE io
+    
     TYPE attributes
         REAL(kind=8) :: temp
         LOGICAL :: EES
@@ -13,4 +14,9 @@ CONTAINS
         WRITE (*, '(A20, 1X, L1)') "EES activated?", att%EES
     END SUBROUTINE
 
+    SUBROUTINE attach_attributes(att)
+        TYPE(attributes), INTENT(IN) :: att
+        CALL attach_double("temperature", att%temp)
+        CALL attach_logical("EES", att%EES)
+    END SUBROUTINE
 END MODULE
