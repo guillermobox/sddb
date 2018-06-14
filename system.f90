@@ -16,7 +16,8 @@ CONTAINS
 
     SUBROUTINE attach_attributes(att)
         TYPE(attributes), INTENT(IN) :: att
-        CALL attach_double("temperature", att%temp)
-        CALL attach_logical("EES", att%EES)
+        CALL attach("temperature", att%temp)
+        CALL attach("EES", att%EES)
     END SUBROUTINE
+
 END MODULE
