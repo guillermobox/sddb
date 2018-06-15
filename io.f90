@@ -1,8 +1,5 @@
 MODULE io
-    USE HDF5 ! This module contains all necessary modules
-    use h5lt
-    use h5ds
-
+    USE HDF5
 
     IMPLICIT NONE
 
@@ -12,6 +9,7 @@ MODULE io
     INTERFACE attach
         MODULE PROCEDURE attach_double
         MODULE PROCEDURE attach_logical
+        MODULE PROCEDURE attach_string
     END INTERFACE
 CONTAINS
 
@@ -53,10 +51,10 @@ SUBROUTINE add_data(data, name, units, fullname)
     CALL h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, data, dims1, error)
 
     IF (PRESENT(units)) THEN
-        CALL attach_string("units", units, where=dataset_id)
+        CALL attach_string("units", units, object=dataset_id)
     END IF
     IF (PRESENT(fullname)) THEN
-        CALL attach_string("fullname", fullname, where=dataset_id)
+        CALL attach_string("fullname", fullname, object=dataset_id)
     END IF
 END SUBROUTINE
 
@@ -89,12 +87,12 @@ SUBROUTINE stamp_time()
     CALL attach_string('creation_time', timestamp)
 END SUBROUTINE
 
-SUBROUTINE attach_string(name, value, where)
+SUBROUTINE attach_string(name, value, object)
     CHARACTER(*), INTENT(IN) :: name, value
-    INTEGER, INTENT(IN), OPTIONAL :: where
+    INTEGER(HID_T), INTENT(IN), OPTIONAL :: object
     INTEGER :: error
     INTEGER(HSIZE_T), DIMENSION(1) :: dims1
-    INTEGER(HID_T) :: atype_id, attr_id, aspace_id
+    INTEGER(HID_T) :: atype_id, attr_id, aspace_id, targetid
     INTEGER(HSIZE_T) :: l
     
     dims1(1) = 1
@@ -105,37 +103,46 @@ SUBROUTINE attach_string(name, value, where)
 
     CALL h5tset_size_f(atype_id, l, error)
 
-    IF (PRESENT(where)) THEN
-        CALL h5acreate_f(where, name, atype_id, aspace_id, attr_id, error)
+    IF (PRESENT(object)) THEN
+        targetid = object
     ELSE
-        CALL h5acreate_f(activeid, name, atype_id, aspace_id, attr_id, error)
+        targetid = activeid
     END IF
-    
+
+    CALL h5acreate_f(targetid, name, atype_id, aspace_id, attr_id, error)
     CALL h5awrite_f(attr_id, atype_id, value, dims1, error)
     CALL h5aclose_f(attr_id, error)
 END SUBROUTINE
 
-SUBROUTINE attach_double(name, value)
+SUBROUTINE attach_double(name, value, object)
     REAL(KIND=8), INTENT(IN) :: value
     CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER(HID_T), INTENT(IN), OPTIONAL :: object
 
-    INTEGER(HID_T) :: attrid, aspace
+    INTEGER(HID_T) :: attrid, aspace, targetid
     INTEGER :: error
     INTEGER(HSIZE_T), DIMENSION(1) :: data_dims
 
     data_dims(1) = 1
 
+    IF (PRESENT(object)) THEN
+        targetid = object
+    ELSE
+        targetid = activeid
+    END IF
+
     CALL h5screate_f(H5S_SCALAR_F, aspace, error)
-    CALL h5acreate_f(activeid, name, H5T_IEEE_F32BE,aspace,attrid,error)
+    CALL h5acreate_f(targetid, name, H5T_IEEE_F32BE,aspace,attrid,error)
     CALL h5awrite_f(attrid, H5T_NATIVE_DOUBLE, value, data_dims, error)
     CALL h5aclose_f(attrid, error)
 END SUBROUTINE
 
-SUBROUTINE attach_logical(name, value)
+SUBROUTINE attach_logical(name, value, object)
     LOGICAL, INTENT(IN) :: value
     CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER(HID_T), INTENT(IN), OPTIONAL :: object
 
-    INTEGER(HID_T) :: attrid, aspace
+    INTEGER(HID_T) :: attrid, aspace, targetid
     INTEGER :: error
     INTEGER(HSIZE_T), DIMENSION(1) :: data_dims
     INTEGER :: bool
@@ -143,7 +150,13 @@ SUBROUTINE attach_logical(name, value)
     data_dims(1) = 1
 
     CALL h5screate_f(H5S_SCALAR_F, aspace, error)
-    CALL h5acreate_f(activeid, name, H5T_STD_I32LE,aspace,attrid,error)
+    IF (PRESENT(object)) THEN
+        targetid = object
+    ELSE
+        targetid = activeid
+    END IF
+
+    CALL h5acreate_f(targetid, name, H5T_STD_I32LE,aspace,attrid,error)
     IF (value) THEN
         bool = 1
     ELSE 

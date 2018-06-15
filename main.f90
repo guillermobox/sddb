@@ -10,13 +10,11 @@ PROGRAM TestingSDDB
 
     INTEGER :: i
 
-    PRINT *, 'Testing SDDB'
-
     att%temp = 77
     att%EES = .TRUE.
 
     x = (/ (REAL(i)*pi/50, i=0,99) /)
-    y = sin(x)*sin(x)
+    y = sin(x)*sin(x)*x*x
 
     CALL init('data.h5')
     CALL new_simulation()
