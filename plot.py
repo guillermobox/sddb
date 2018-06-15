@@ -1,6 +1,7 @@
 # pylint: disable=no-member
 import h5py
 import matplotlib
+import sys
 
 matplotlib.use('Qt5Agg')
 
@@ -24,12 +25,15 @@ def label_from_dataset(dset):
         label = label + ' (' + units.decode('ascii') + ')'
     return label
 
-filename = 'data.h5'
+filename = sys.argv[1]
+groupname = sys.argv[2]
+
 f = h5py.File(filename)
 
-group = f['/last']
-li = f.get('/last', getlink=True)
-groupname = li.path
+group = f[groupname]
+li = f.get(groupname, getlink=True)
+if type(li) == h5py.SoftLink:
+    groupname = li.path
 
 current = group['current']
 voltage = group['voltage']

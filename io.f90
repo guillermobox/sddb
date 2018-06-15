@@ -4,34 +4,42 @@ MODULE io
     IMPLICIT NONE
 
     INTEGER(HID_T) :: fileid
-    INTEGER(HID_T) :: activeid
+    INTEGER(HID_T) :: activeid = 0
 
     INTERFACE attach
         MODULE PROCEDURE attach_double
         MODULE PROCEDURE attach_logical
         MODULE PROCEDURE attach_string
+        MODULE PROCEDURE attach_integer
     END INTERFACE
 CONTAINS
 
 SUBROUTINE init(filename)
     CHARACTER(LEN=*), INTENT(IN) :: filename
     INTEGER :: error
+    LOGICAL :: exists, ishdf5
 
     CALL h5open_f(error)
     !CALL h5eset_auto_f(0, error)
 
-    CALL h5fopen_f(filename, H5F_ACC_RDWR_F, fileid, error)
-    IF (error /= 0) THEN
+    INQUIRE(FILE=filename, EXIST=exists)
+
+    IF (exists) THEN
+        CALL h5fis_hdf5_f(filename, ishdf5, error)
+        IF (ishdf5) THEN
+            CALL h5fopen_f(filename, H5F_ACC_RDWR_F, fileid, error)
+        ELSE
+            STOP 'That is not an hdf5 file!'
+        END IF
+    ELSE
         CALL h5fcreate_f(filename, H5F_ACC_TRUNC_F, fileid, error)
     END IF
-
-    activeid = fileid
 END SUBROUTINE
 
 SUBROUTINE end()
     INTEGER :: error
-    CALL h5gclose_f(activeid, error)
 
+    IF (activeid /= 0) CALL h5gclose_f(activeid, error)
     CALL h5fclose_f(fileid, error)
     CALL h5close_f(error)
 END SUBROUTINE
@@ -62,14 +70,17 @@ SUBROUTINE new_simulation()
     INTEGER :: nmembers
     INTEGER :: hdferr       
     CHARACTER(LEN=8) :: gname
+    LOGICAL :: exists
 
-    CALL h5gn_members_f(fileid, "/", nmembers, hdferr)           
+    CALL h5lexists_f(fileid, "last", exists, hdferr)
+    IF (exists) THEN
+        CALL h5ldelete_f(fileid, "last", hdferr)
+    END IF
 
-    WRITE (gname, '(I4.4)') nmembers + 1
-
+    CALL h5gn_members_f(fileid, "/", nmembers, hdferr)
+    WRITE (gname, '(I4.4)') nmembers
     CALL h5gcreate_f(fileid, gname, activeid, hdferr)
 
-    CALL h5ldelete_f(fileid, "last", hdferr)
     CALL h5lcreate_soft_f(gname, fileid, "last", hdferr)
 
     CALL stamp_time()
@@ -163,6 +174,30 @@ SUBROUTINE attach_logical(name, value, object)
         bool = 0
     END IF  
     CALL h5awrite_f(attrid, H5T_NATIVE_INTEGER, bool, data_dims, error)
+    CALL h5aclose_f(attrid, error)
+END SUBROUTINE
+
+
+SUBROUTINE attach_integer(name, value, object)
+    INTEGER, INTENT(IN) :: value
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER(HID_T), INTENT(IN), OPTIONAL :: object
+
+    INTEGER(HID_T) :: attrid, aspace, targetid
+    INTEGER :: error
+    INTEGER(HSIZE_T), DIMENSION(1) :: data_dims
+
+    data_dims(1) = 1
+
+    CALL h5screate_f(H5S_SCALAR_F, aspace, error)
+    IF (PRESENT(object)) THEN
+        targetid = object
+    ELSE
+        targetid = activeid
+    END IF
+
+    CALL h5acreate_f(targetid, name, H5T_STD_I32LE,aspace,attrid,error)
+    CALL h5awrite_f(attrid, H5T_NATIVE_INTEGER, value, data_dims, error)
     CALL h5aclose_f(attrid, error)
 END SUBROUTINE
 

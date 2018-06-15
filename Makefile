@@ -1,6 +1,7 @@
 
 main: *.f90
-	h5fc system.f90 io.f90 main.f90 -o main
+	h5fc -c io.f90
+	h5fc io.o main.f90 -o main
 
 
 clean:
