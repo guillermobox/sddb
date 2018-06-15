@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 import h5py
 import matplotlib
 
@@ -12,9 +13,18 @@ matplotlib.rcParams['figure.figsize'] = (3.5, 2.7)
 matplotlib.rcParams['savefig.dpi'] = 300
 
 def label_from_dataset(dset):
-    label = '{0} ({1})'.format(dset.attrs['fullname'].decode('utf8'), dset.attrs['units']
-    .decode('utf8'))
+    fullname = dset.attrs.get('fullname')
+    if fullname:
+        label = fullname.decode('ascii')
+    else:
+        label = dset.name.split('/')[-1]
+
+    units = dset.attrs.get('units')
+
+    if units:
+        label = label + ' (' + units.decode('ascii') + ')'
     return label
+
 filename = 'data.h5'
 f = h5py.File(filename)
 
@@ -49,7 +59,11 @@ for at in group.attrs:
         continue
     title = title + at + " = " + str(group.attrs[at]) + " "
 
-plt.plot(voltage.value, current.value, 'k-')
+plt.plot(voltage.value, current.value,
+    color='black',
+    linestyle='solid',
+    linewidth=1
+)
 plt.title(title.strip())
 
 plt.xlabel(label_from_dataset(voltage))
