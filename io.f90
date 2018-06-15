@@ -74,8 +74,20 @@ SUBROUTINE new_simulation()
     CALL h5ldelete_f(fileid, "last", hdferr)
     CALL h5lcreate_soft_f(gname, fileid, "last", hdferr)
 
+    CALL stamp_time()
 END SUBROUTINE
 
+SUBROUTINE stamp_time()
+    INTEGER, DIMENSION(8) :: values
+    CHARACTER (LEN=5) :: zone
+    CHARACTER (LEN=26) :: timestamp
+
+    CALL date_and_time(VALUES=values, ZONE=zone)
+
+    WRITE (timestamp, '(I4.4,"-",I2.2,"-",I2.2," ",I2.2,":",I2.2,":",I2.2," ",A)') values(1:3), values(5:7), zone
+
+    CALL attach_string('creation_time', timestamp)
+END SUBROUTINE
 
 SUBROUTINE attach_string(name, value, where)
     CHARACTER(*), INTENT(IN) :: name, value
