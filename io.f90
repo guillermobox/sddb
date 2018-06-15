@@ -95,13 +95,14 @@ SUBROUTINE attach_string(name, value, where)
     INTEGER :: error
     INTEGER(HSIZE_T), DIMENSION(1) :: dims1
     INTEGER(HID_T) :: atype_id, attr_id, aspace_id
-    INTEGER(HSIZE_T) :: l = 80
+    INTEGER(HSIZE_T) :: l
     
     dims1(1) = 1
     CALL h5tcopy_f(H5T_NATIVE_CHARACTER, atype_id, error)
-    CALL h5screate_simple_f(1, dims1, aspace_id, error)
+    CALL h5screate_f(H5S_SCALAR_F, aspace_id, error)
+
     l = LEN(value)
-    PRINT *, l
+
     CALL h5tset_size_f(atype_id, l, error)
 
     IF (PRESENT(where)) THEN

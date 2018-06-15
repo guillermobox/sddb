@@ -12,7 +12,8 @@ matplotlib.rcParams['figure.figsize'] = (3.5, 2.7)
 matplotlib.rcParams['savefig.dpi'] = 300
 
 def label_from_dataset(dset):
-    label = '{0} ({1})'.format(dset.attrs['fullname'][0].decode('utf8'), dset.attrs['units'][0].decode('utf8'))
+    label = '{0} ({1})'.format(dset.attrs['fullname'].decode('utf8'), dset.attrs['units']
+    .decode('utf8'))
     return label
 filename = 'data.h5'
 f = h5py.File(filename)
@@ -33,7 +34,7 @@ plt.annotate(filename, (0.02, 0.98),
 )
 
 if 'creation_time' in group.attrs:
-    time = group.attrs['creation_time'][0].decode('ascii')
+    time = group.attrs['creation_time'].decode('ascii')
     plt.annotate(time, (0.98, 0.98),
         xycoords='figure fraction',
         verticalalignment='top',
