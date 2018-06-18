@@ -10,8 +10,6 @@ PROGRAM TestingSDDB
 
     INTEGER :: i
 
-
-
     temp = 77
     EES = .TRUE.
 

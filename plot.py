@@ -3,11 +3,11 @@ import h5py
 import matplotlib
 import sys
 
-matplotlib.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
 
 import matplotlib.pyplot as plt
 
-plt.style.use('/home/indalecio/Desktop/TU/guille.mplstyle')
+plt.style.use('/home/guille/Desktop/guille.mplstyle')
 
 matplotlib.rcParams['figure.figsize'] = (3.5, 2.7)
 matplotlib.rcParams['savefig.dpi'] = 300
